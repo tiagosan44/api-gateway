@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: AI API Gateway
+  description: High-performance edge gateway providing secure ingress, distributed rate limiting, and observability for AI microservices
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the gateway
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Gateway is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Gateway is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /ready:
+    get:
+      summary: Readiness check endpoint
+      description: Returns the readiness status of the gateway
+      operationId: readinessCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Gateway is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Gateway is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      summary: Prometheus metrics endpoint
+      description: Exposes Prometheus metrics for monitoring
+      operationId: getMetrics
+      tags:
+        - Observability
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /v1/{service}/{path}:
+    get:
+      summary: Proxy request to upstream service
+      description: Routes requests to configured upstream services
+      operationId: proxyRequest
+      tags:
+        - Proxy
+      parameters:
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Upstream service name
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Path to forward to upstream service
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+          description: JWT or OIDC token (Bearer token)
+      responses:
+        '200':
+          description: Successful response from upstream
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              headers:
+                X-RateLimit-Limit:
+                  schema:
+                    type: integer
+                  description: Rate limit per time window
+                X-RateLimit-Remaining:
+                  schema:
+                    type: integer
+                  description: Remaining requests in current window
+                X-RateLimit-Reset:
+                  schema:
+                    type: integer
+                  description: Time when rate limit resets (Unix timestamp)
+        '502':
+          description: Bad Gateway - Upstream service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+      required:
+        - status
+        - timestamp
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - error
+        - message
+        - code
+        - timestamp
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT or OIDC token authentication
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Health
+    description: Health and readiness checks
+  - name: Proxy
+    description: Proxy requests to upstream services
+  - name: Observability
+    description: Metrics and monitoring endpoints
+
