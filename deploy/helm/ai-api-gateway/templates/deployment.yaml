@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ai-api-gateway.fullname" . }}
+  labels:
+    {{- include "ai-api-gateway.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ai-api-gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "ai-api-gateway.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ai-api-gateway.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.config.server.port }}
+          protocol: TCP
+        env:
+        - name: SERVER_PORT
+          value: "{{ .Values.config.server.port }}"
+        - name: REDIS_URL
+          value: "{{ .Values.config.redis.url }}"
+        - name: AUTH_TYPE
+          value: "{{ .Values.config.auth.type }}"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "ai-api-gateway.fullname" . }}-secrets
+              key: jwtSecret
+              optional: true
+        - name: OIDC_ISSUER
+          value: "{{ .Values.config.auth.oidcIssuer }}"
+        - name: OIDC_CLIENT_ID
+          value: "{{ .Values.config.auth.oidcClientID }}"
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "ai-api-gateway.fullname" . }}-secrets
+              key: oidcClientSecret
+              optional: true
+        - name: RATELIMIT_ENABLED
+          value: "{{ .Values.config.rateLimit.enabled }}"
+        - name: RATELIMIT_ALGORITHM
+          value: "{{ .Values.config.rateLimit.algorithm }}"
+        - name: RATELIMIT_BUCKET_SIZE
+          value: "{{ .Values.config.rateLimit.bucketSize }}"
+        - name: RATELIMIT_REFILL_RATE
+          value: "{{ .Values.config.rateLimit.refillRate }}"
+        - name: RATELIMIT_WINDOW_SIZE
+          value: "{{ .Values.config.rateLimit.windowSize }}"
+        - name: PROXY_LOAD_BALANCER
+          value: "{{ .Values.config.proxy.loadBalancer }}"
+        - name: LOG_LEVEL
+          value: "{{ .Values.config.observability.logLevel }}"
+        - name: TRACING_ENABLED
+          value: "{{ .Values.config.observability.tracingEnabled }}"
+        - name: JAEGER_ENDPOINT
+          value: "{{ .Values.config.observability.jaegerEndpoint }}"
+        - name: METRICS_ENABLED
+          value: "{{ .Values.config.observability.metricsEnabled }}"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.envoy.enabled }}
+      - name: envoy
+        image: "{{ .Values.envoy.image.repository }}:{{ .Values.envoy.image.tag }}"
+        ports:
+        - name: envoy-admin
+          containerPort: 9901
+          protocol: TCP
+        volumeMounts:
+        - name: envoy-config
+          mountPath: /etc/envoy
+      volumes:
+      - name: envoy-config
+        configMap:
+          name: {{ include "ai-api-gateway.fullname" . }}-envoy
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

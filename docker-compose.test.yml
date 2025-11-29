@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  redis-test:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+
+  gateway-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - SERVER_PORT=8080
+      - REDIS_URL=redis://redis-test:6379
+      - LOG_LEVEL=debug
+      - AUTH_TYPE=mock
+      - RATELIMIT_ALGORITHM=token_bucket
+      - RATELIMIT_ENABLED=true
+    depends_on:
+      redis-test:
+        condition: service_healthy
+    ports:
+      - "8082:8080"
+

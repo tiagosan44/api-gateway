@@ -48,6 +48,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=info
       - AUTH_TYPE=both
+      - JWT_SECRET=dev-secret-change-me
+      - OIDC_ISSUER=http://mock-auth:80
       - RATELIMIT_ALGORITHM=token_bucket
       - RATELIMIT_ENABLED=true
     depends_on:

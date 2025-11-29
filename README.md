@@ -151,12 +151,61 @@ docker-compose -f docker-compose.test.yml up
 go test ./tests/integration/...
 ```
 
+### Load testing with k6
+
+You can run the load test located at `tests/load/k6_test.js` in a few different ways.
+
+Prerequisites:
+- The gateway must be running and expose `/health` and `/metrics` (default http://localhost:8080 when using `docker-compose up -d`).
+- Optionally, set `BASE_URL` to point the test at a different host/port.
+
+Option A — Use local k6 CLI (recommended):
+1. Install k6: https://k6.io/docs/get-started/installation/
+2. Start the stack (if not already running):
+   ```bash
+   docker-compose up -d
+   ```
+3. Run the test against the default gateway on port 8080:
+   ```bash
+   k6 run tests/load/k6_test.js
+   ```
+   Or explicitly set the target URL:
+   ```bash
+   BASE_URL=http://localhost:8080 k6 run tests/load/k6_test.js
+   ```
+
+Option B — Use the test compose profile (AUTH_TYPE=mock):
+1. Start the test stack:
+   ```bash
+   docker-compose -f docker-compose.test.yml up -d
+   ```
+   This exposes the gateway on port 8082.
+2. Run the test pointing to port 8082:
+   ```bash
+   BASE_URL=http://localhost:8082 k6 run tests/load/k6_test.js
+   ```
+
+Option C — Run k6 via Docker (no local install):
+```bash
+docker run --rm -i \
+  -e BASE_URL=http://host.docker.internal:8080 \
+  -v "$PWD":/work -w /work \
+  grafana/k6:latest run tests/load/k6_test.js
+```
+On Linux, replace `host.docker.internal` with your Docker host IP (often `172.17.0.1`) or the host’s LAN IP.
+
+Notes:
+- The test stages ramp to 50 virtual users and assert p(95) < 500ms with error rate < 10%.
+- You can tweak stages and thresholds inside `tests/load/k6_test.js`.
+- If you see 401/403 responses, ensure your `AUTH_TYPE` and related env vars are compatible with your environment. The default `docker-compose.yml` uses `AUTH_TYPE=both` with a dev JWT secret and mock OIDC issuer; the test compose uses `AUTH_TYPE=mock`.
+
 ## Documentation
 
 - [Configuration Guide](docs/configuration.md)
 - [Runbook](docs/runbook.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [API Specification](api/openapi.yaml)
+- [Helm: configuración de autenticación](docs/helm_auth.md)
 
 ## License
 

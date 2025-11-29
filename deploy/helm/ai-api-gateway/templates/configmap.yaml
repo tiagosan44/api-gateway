@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ai-api-gateway.fullname" . }}-config
+  labels:
+    {{- include "ai-api-gateway.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      port: {{ .Values.config.server.port }}
+    redis:
+      url: {{ .Values.config.redis.url }}
+    rateLimit:
+      enabled: {{ .Values.config.rateLimit.enabled }}
+      algorithm: {{ .Values.config.rateLimit.algorithm }}
+      bucketSize: {{ .Values.config.rateLimit.bucketSize }}
+      refillRate: {{ .Values.config.rateLimit.refillRate }}
+
