@@ -1,6 +1,11 @@
 name: Code Generation Validation
 
-on: [pull_request, push]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
 
 jobs:
   validate-code-generation:
