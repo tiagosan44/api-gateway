@@ -70,13 +70,13 @@ Prevent invalid or incomplete specs from entering the codebase.
 Eliminate contract drift and boilerplate.
 
 ### Actions
-- [ ] Generate controllers, DTOs, clients
-- [ ] Keep generated code isolated
-- [ ] Do not modify generated files manually
+- [x] Generate controllers, DTOs, clients
+- [x] Keep generated code isolated
+- [x] Do not modify generated files manually
 
 ### Artifacts
-- [ ] Generated API interfaces
-- [ ] Generated models/events
+- [x] Generated API interfaces
+- [x] Generated models/events
 
 ### Output
 - Code aligned with specs
