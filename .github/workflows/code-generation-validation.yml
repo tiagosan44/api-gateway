@@ -9,29 +9,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
       - name: Generate code from specs
         run: mvn clean generate-sources
 
-      - name: Check for uncommitted generated code differences
+      - name: Check generated sources exist
         run: |
-          # Generate code
-          mvn clean generate-sources -q
-
           # Check if generated sources exist
           if [ ! -d "target/generated-sources/openapi" ]; then
             echo "❌ Generated sources not found! Generation failed."
-            exit 1
-          fi
-
-          if [ ! -d "target/generated-sources/openapi-client" ]; then
-            echo "❌ Generated client sources not found! Generation failed."
             exit 1
           fi
 
@@ -39,12 +31,10 @@ jobs:
 
           # Count generated files
           API_FILES=$(find target/generated-sources/openapi -name "*.java" | wc -l)
-          CLIENT_FILES=$(find target/generated-sources/openapi-client -name "*.java" | wc -l)
 
-          echo "📊 Generated $API_FILES API interface files"
-          echo "📊 Generated $CLIENT_FILES client files"
+          echo "📊 Generated $API_FILES API and model files"
 
-          if [ "$API_FILES" -eq 0 ] || [ "$CLIENT_FILES" -eq 0 ]; then
+          if [ "$API_FILES" -eq 0 ]; then
             echo "❌ No Java files were generated!"
             exit 1
           fi
@@ -62,12 +52,6 @@ jobs:
           echo "Checking generated models..."
           if [ ! -d "target/generated-sources/openapi/src/main/java/org/spatino/apigateway/generated/model" ]; then
             echo "❌ Model package not found!"
-            exit 1
-          fi
-
-          echo "Checking generated client..."
-          if [ ! -d "target/generated-sources/openapi-client/src/main/java/org/spatino/apigateway/generated/client" ]; then
-            echo "❌ Client package not found!"
             exit 1
           fi
 

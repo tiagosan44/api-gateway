@@ -38,12 +38,9 @@ This project uses **OpenAPI Generator** to automatically generate code from spec
 - And more...
 
 ### 3. Client (WebClient)
-- **Location**: `target/generated-sources/openapi-client/src/main/java/org/spatino/apigateway/generated/client/`
-- **Purpose**: Java WebClient for downstream services
-- **Features**:
-  - Reactive WebClient implementation
-  - Type-safe API calls
-  - Auto-generated test files
+- **Status**: ⚠️ Currently disabled due to Spring Boot 4 compatibility issues
+- Client generation will be re-enabled once OpenAPI Generator adds full support for Spring Boot 4
+- For now, use Spring WebClient directly for calling downstream services
 
 ## 🔧 How to Generate Code
 
@@ -82,13 +79,7 @@ The OpenAPI Generator is configured in `pom.xml` with two executions:
 ```
 
 ### Client Generation
-```xml
-<execution>
-    <id>generate-api-client</id>
-    <generatorName>java</generatorName>
-    <library>webclient</library>
-</execution>
-```
+⚠️ **Currently disabled** - Commented out in pom.xml due to Spring Boot 4 compatibility issues.
 
 ## 🚫 Important Rules
 
@@ -185,9 +176,16 @@ mvn clean generate-sources
 ```
 
 ### Issue: Compilation Errors
-- Ensure Java 25 is installed
+- Ensure Java 21 is installed (`java -version`)
 - Check Spring Boot 4.0.1 compatibility
 - Verify all dependencies are downloaded
+- Run `mvn dependency:tree` to check for conflicts
+
+### Issue: GitHub Actions Failing
+- All workflows use Java 21 (not Java 25)
+- Spec validation uses `swagger-cli` for validation
+- Code generation validation doesn't check for client (disabled)
+- Test reporter requires proper permissions in workflow
 
 ## 📚 Resources
 
