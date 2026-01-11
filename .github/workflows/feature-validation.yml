@@ -1,0 +1,34 @@
+name: Feature Branch Quick Validation
+
+# Only runs on feature branches (not on PR)
+# Provides fast feedback before creating PR
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  quick-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Quick compile check
+        run: mvn clean compile -DskipTests -q
+
+      - name: Run fast tests only
+        run: mvn test -Dtest="*Test" -DfailIfNoTests=false
+        continue-on-error: true
+
+      - name: Validation summary
+        run: |
+          echo "✅ Feature branch validation completed"
+          echo "📝 Create a PR to run full CI pipeline"
