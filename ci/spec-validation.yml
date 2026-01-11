@@ -1,0 +1,68 @@
+name: Gateway Spec Validation
+
+on: [pull_request]
+
+jobs:
+  validate-specs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate OpenAPI
+        uses: char0n/swagger-editor-validate@v1
+        with:
+          definition-file: specs/openapi.yaml
+
+      - name: Enforce spec presence
+        run: |
+          test -f specs/rate-limiting.md
+          test -f specs/load-balancing.md
+          test -f specs/observability.md
+          test -f specs/caching.md
+
+      - name: Validate spec structure
+        run: |
+          # Function to validate required sections
+          validate_spec() {
+            local file=$1
+            shift
+            local sections=("$@")
+
+            echo "Validating $file..."
+            for section in "${sections[@]}"; do
+              if ! grep -q "^## $section" "$file"; then
+                echo "❌ Missing required section: ## $section in $file"
+                exit 1
+              fi
+            done
+            echo "✅ $file is valid"
+          }
+
+          # Validate rate-limiting.md
+          validate_spec "specs/rate-limiting.md" \
+            "Goal" \
+            "Algorithm" \
+            "Configuration" \
+            "Failure Mode"
+
+          # Validate load-balancing.md
+          validate_spec "specs/load-balancing.md" \
+            "Goal" \
+            "Algorithm" \
+            "Configuration" \
+            "Failure Mode"
+
+          # Validate caching.md
+          validate_spec "specs/caching.md" \
+            "Goal" \
+            "Algorithm" \
+            "Configuration" \
+            "Failure Mode"
+
+          # Validate observability.md
+          validate_spec "specs/observability.md" \
+            "Goal" \
+            "Configuration" \
+            "Failure Mode"
+
+          echo "✅ All specs are structurally valid"
