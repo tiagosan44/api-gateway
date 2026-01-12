@@ -90,13 +90,13 @@ Eliminate contract drift and boilerplate.
 Implement business logic without changing contracts.
 
 ### Actions
-- [ ] Implement service logic
-- [ ] Connect infrastructure (DB, Kafka, Redis)
-- [ ] Respect spec-defined behavior
+- [x] Implement service logic
+- [x] Connect infrastructure (DB, Kafka, Redis)
+- [x] Respect spec-defined behavior
 
 ### Artifacts
-- [ ] Application code (services, handlers)
-- [ ] Infrastructure adapters
+- [x] Application code (services, handlers)
+- [x] Infrastructure adapters
 
 ### Output
 - Working system

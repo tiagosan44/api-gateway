@@ -91,6 +91,12 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
+
+        <!-- Redis for caching -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -114,6 +120,7 @@
                 <executions>
                     <execution>
                         <id>generate-api-server</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
@@ -143,31 +150,6 @@
                             </configOptions>
                         </configuration>
                     </execution>
-                    <!-- Client generation disabled due to Spring Boot 4 compatibility issues
-                    <execution>
-                        <id>generate-api-client</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/specs/openapi.yaml</inputSpec>
-                            <generatorName>java</generatorName>
-                            <library>webclient</library>
-                            <apiPackage>org.spatino.apigateway.generated.client.api</apiPackage>
-                            <modelPackage>org.spatino.apigateway.generated.client.model</modelPackage>
-                            <invokerPackage>org.spatino.apigateway.generated.client</invokerPackage>
-                            <output>${project.build.directory}/generated-sources/openapi-client</output>
-                            <generateSupportingFiles>true</generateSupportingFiles>
-                            <configOptions>
-                                <useJakartaEe>true</useJakartaEe>
-                                <java8>false</java8>
-                                <dateLibrary>java8</dateLibrary>
-                                <serializableModel>true</serializableModel>
-                                <useAbstractionForFiles>true</useAbstractionForFiles>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                    -->
                 </executions>
             </plugin>
 
