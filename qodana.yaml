@@ -21,17 +21,11 @@ include:
 exclude:
   - name: ALL
     paths:
-      - target/generated-sources/**
-
-projectJDK: "21" #(Applied in CI/CD pipeline)
-
-# Exclude generated sources from analysis
-ignore:
-  - name: All
-    paths:
       - target/**
       - .idea/**
       - .mvn/**
+
+projectJDK: "21" #(Applied in CI/CD pipeline)
 
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
 #bootstrap: sh ./prepare-qodana.sh
