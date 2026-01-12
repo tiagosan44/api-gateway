@@ -2,6 +2,7 @@ package org.spatino.apigateway.filter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,6 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -95,6 +95,7 @@ public class RateLimitingFilter implements WebFilter {
 
     private static class RateLimitInfo {
         private final AtomicInteger count = new AtomicInteger(0);
+        @Getter
         private volatile long resetTime;
 
         public RateLimitInfo() {
@@ -107,10 +108,6 @@ public class RateLimitingFilter implements WebFilter {
 
         public void increment() {
             count.incrementAndGet();
-        }
-
-        public long getResetTime() {
-            return resetTime;
         }
 
         public boolean isExpired() {

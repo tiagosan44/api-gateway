@@ -57,7 +57,7 @@ public class ProductController implements ProductsApi {
     public Mono<ResponseEntity<Void>> deleteProduct(UUID productId, ServerWebExchange exchange) {
         return productService.deleteProduct(productId)
                 .map(deleted -> deleted ? 
-                        ResponseEntity.noContent().<Void>build() : 
-                        ResponseEntity.notFound().<Void>build());
+                        ResponseEntity.noContent().build() :
+                        ResponseEntity.notFound().build());
     }
 }

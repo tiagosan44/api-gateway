@@ -1,14 +1,12 @@
 package org.spatino.apigateway.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.spatino.apigateway.generated.model.Category;
 import org.spatino.apigateway.generated.model.CategoryListResponse;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,20 +40,22 @@ public class CategoryService {
 
     public Mono<CategoryListResponse> listCategories() {
         log.info("Listing all categories");
-        return Mono.fromCallable(() -> {
-            List<Category> categories = new ArrayList<>(categoryStore.values());
-            
-            // Update product counts dynamically
-            categories.forEach(category -> {
-                long count = productService.listProducts(0, Integer.MAX_VALUE, category.getName(), null, null, null)
-                        .map(response -> response.getProducts().size())
-                        .block();
-                category.setProductCount((int) count);
-            });
 
-            CategoryListResponse response = new CategoryListResponse();
-            response.setCategories(categories);
-            return response;
-        });
+        return Flux.fromIterable(categoryStore.values())
+                .flatMap(this::updateProductCount)
+                .collectList()
+                .map(categories -> {
+                    CategoryListResponse response = new CategoryListResponse();
+                    response.setCategories(categories);
+                    return response;
+                });
+    }
+
+    private Mono<Category> updateProductCount(Category category) {
+        return productService.listProducts(0, Integer.MAX_VALUE, category.getName(), null, null, null)
+                .map(response -> {
+                    category.setProductCount(response.getProducts().size());
+                    return category;
+                });
     }
 }
