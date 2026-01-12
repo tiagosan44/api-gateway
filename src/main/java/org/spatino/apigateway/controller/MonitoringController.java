@@ -11,24 +11,20 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Health check controller implementing the generated MonitoringApi interface.
- */
 @RestController
-public class HealthController implements MonitoringApi {
+public class MonitoringController implements MonitoringApi {
 
     @Override
     public Mono<ResponseEntity<HealthResponse>> healthCheck(ServerWebExchange exchange) {
-        HealthResponse response = new HealthResponse();
-        response.setStatus(HealthResponse.StatusEnum.UP);
-        response.setTimestamp(OffsetDateTime.now());
+        HealthResponse health = new HealthResponse();
+        health.setStatus(HealthResponse.StatusEnum.UP);
+        health.setTimestamp(OffsetDateTime.now());
 
-        // TODO: Check actual upstream services
         Map<String, String> upstreamServices = new HashMap<>();
         upstreamServices.put("product-service", "UP");
         upstreamServices.put("inventory-service", "UP");
-        response.setUpstreamServices(upstreamServices);
+        health.setUpstreamServices(upstreamServices);
 
-        return Mono.just(ResponseEntity.ok(response));
+        return Mono.just(ResponseEntity.ok(health));
     }
 }
